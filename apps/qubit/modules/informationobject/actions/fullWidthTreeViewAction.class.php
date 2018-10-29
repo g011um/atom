@@ -72,7 +72,15 @@ class InformationObjectFullWidthTreeViewAction extends DefaultFullTreeViewAction
         }
       }
 
-      $data = $this->getNodeOrChildrenNodes($this->resource->id, $baseReferenceCode, $children = true);
+    // Do ordering during query as we need to page through the results
+    $options = array(
+      'orderColumn' => 'current_i18n.title',
+      'memorySort' => true,
+      'skip' => $request->skip,
+      'limit' => $request->nodeLimit
+    );
+
+      $data = $this->getNodeOrChildrenNodes($this->resource->id, $baseReferenceCode, $children = true, $options);
     }
 
     return $this->renderText(json_encode($data['nodes']));

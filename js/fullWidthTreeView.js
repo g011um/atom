@@ -15,6 +15,8 @@
 
   $(loadTreeView);
 
+  var pager = new Qubit.TreeviewPager(10);
+
   function loadTreeView ()
   {
     var url  = '/informationobject/fullWidthTreeView';
