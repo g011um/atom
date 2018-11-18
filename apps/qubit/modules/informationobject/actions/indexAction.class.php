@@ -115,7 +115,7 @@ class InformationObjectIndexAction extends sfAction
       $this->getResponse()->addStylesheet('/vendor/jstree/themes/default/style.min.css', 'last');
       $this->getResponse()->addJavascript('treeviewTypes', 'last');
       $this->getResponse()->addJavascript('pager', 'last');
-      $this->getResponse()->addJavascript('treeviewPager', 'last');
+      $this->getResponse()->addJavascript('treeViewPager', 'last');
       $this->getResponse()->addJavascript('fullWidthTreeView', 'last');
       $this->getResponse()->addJavascript('/vendor/jstree/jstree.min.js', 'last');
     }
