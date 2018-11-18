@@ -1,5 +1,6 @@
 (function ($) {
 
+/*
     // Handle older browser using hash/anchor urls
     if (window.location.hash)
     {
@@ -10,12 +11,11 @@
         return;
       }
     }
+*/
 
   "use strict";
 
   $(loadTreeView);
-
-  var pager = new Qubit.TreeviewPager(10);
 
   function loadTreeView ()
   {
@@ -23,6 +23,9 @@
     var $fwTreeView = $('<div id="fullwidth-treeview"></div>');
     var $fwTreeViewRow = $('<div id="fullwidth-treeview-row"></div>');
     var $mainHeader = $('#main-column h1').first();
+    var $moreButton = $('<div style="float: right">more</div>');
+    var rootNodeHref;
+    var pager = new Qubit.TreeviewPager(10, $fwTreeView, window.location.pathname + url);
 
     // Add tree-view divs after main header, animate and allow resize
     $mainHeader.after(
@@ -31,6 +34,8 @@
         .animate({height: '200px'}, 500)
         .resizable({handles: 's'})
     );
+
+    $mainHeader.after($moreButton);
 
     // Declare jsTree options
     var options = {
@@ -52,24 +57,69 @@
       'core': {
         'data': {
           'url': function (node) {
+            // Get first page of results
+            var queryString = "?nodeLimit=" + (pager.getSkip() + pager.getLimit());
+
+/*
+if (node.id == '#')
+{
+  console.log(window.location.pathname.match("^[^;]*")[0] + url + queryString);
+}
+else
+{
+  console.log(node.a_attr.href + url);
+}
+*/
+
             return node.id === '#' ?
-              window.location.pathname.match("^[^;]*")[0] + url :
+              window.location.pathname.match("^[^;]*")[0] + url + queryString :
               node.a_attr.href + url;
           },
           'data': function (node) {
+console.log(node.id);
             return node.id === '#' ?
               {'firstLoad': true} :
               {'firstLoad': false, 'referenceCode': node.original.referenceCode};
-          }
+          },
+
+
+          'dataFilter': function (response) {
+            // Data from the initial request for hierarchy data contains
+            // additional data relating to paging so we need to parse to
+            // differentiate it.
+            var data = JSON.parse(response);
+
+            // Note root node's href and set number of available items to page through
+            if (typeof rootNodeHref == 'undefined')
+            {
+console.log(data.nodes[0]);
+              rootNodeHref = data.nodes[0].a_attr.href;
+              pager.setTotal(data.nodes[0].total);
+            }
+
+            // Allow for both styles of nodes
+            if (typeof data.nodes === "undefined") {
+              // Data is an array of jsTree node definitions
+              return JSON.stringify(data);
+            } else {
+              // Data includes both nodes and the total number of available nodes
+              return JSON.stringify(data.nodes);
+            }
+          },
+
+
+
         },
         'check_callback': function (operation, node, node_parent, node_position, more) {
           // Operations allowed:
           // - Before and after drag and drop between siblings
           // - Move core operations (node drop event)
-          return operation === 'move_node'
-            && (more.core || (more.dnd
-            && node.parent === more.ref.parent
-            && more.pos !== 'i'));
+          return operation === 'create_node' ||
+            (operation === 'move_node'
+              && (more.core || (more.dnd
+              && node.parent === more.ref.parent
+              && more.pos !== 'i'))
+            );
         }
       }
     };
@@ -84,6 +134,8 @@
         $activeNode.scrollIntoView(true);
         $('body')[0].scrollIntoView(true);
       }
+
+      pager.updateMoreLink($moreButton);
     };
 
     // On node selection: load the informationobject's page and insert the current page
@@ -196,6 +248,21 @@
       .bind('hover_node.jstree', hoverNodeListener)
       .bind('open_node.jstree', openNodeListener)
       .bind('move_node.jstree', moveNodeListener);
+
+    // Clicking "more" will add next page of results to tree
+    $moreButton.click(function() {
+//console.log(pager.getSkip());
+      pager.next();
+//console.log(pager.getSkip());
+      console.log('start');
+      //startActivity();
+      pager.getAndAppendNodes(function() {
+        // Queue is empty so update paging link
+        console.log('end');
+        //endActivity();
+        pager.updateMoreLink($moreButton);
+      });
+    });
 
     // TODO restore window.history states
     $(window).bind('popstate', function() {});

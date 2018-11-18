@@ -64,7 +64,8 @@ class DefaultFullTreeViewAction extends sfAction
     $limitClause = "";
     $skip = (isset($options['skip'])) ? $options['skip'] : null;
     $limit = (isset($options['limit'])) ? $options['limit'] : null;
-    if (ctype_digit($skip) || ctype_digit($limit))
+
+    if ($children && (ctype_digit($skip) || ctype_digit($limit)))
     {
       $limitClause = "LIMIT ";
       $limitClause .= (ctype_digit($skip)) ? $skip : "0";
@@ -238,8 +239,15 @@ class DefaultFullTreeViewAction extends sfAction
             $refCode = $result['referenceCode'];
           }
 
-          $childData = $this->getNodeOrChildrenNodes($result['id'], $refCode, $children = true);
+          $childOptions = array();
+          if (!$children && (isset($options['skip']) || isset($options['limit'])))
+          {
+            $childOptions = array('skip' => $options['skip'], 'limit' => $options['limit']);
+          }
+
+          $childData = $this->getNodeOrChildrenNodes($result['id'], $refCode, $children = true, $childOptions);
           $result['children'] = $childData['nodes'];
+          $result['total'] = $childData['total'];
         }
       }
 

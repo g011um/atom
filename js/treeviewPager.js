@@ -2,11 +2,12 @@
 
 (function ($, Qubit) {
 
-  Qubit.TreeviewPager = function(limit, treeEl, url)
+  Qubit.TreeviewPager = function(limit, treeEl, url, rootId)
   {
     Qubit.Pager.call(this, limit);
     this.treeEl = treeEl;
     this.url = url;
+    this.rootId = rootId;
   }
 
   Qubit.TreeviewPager.prototype = new Qubit.Pager;
@@ -23,6 +24,7 @@
     $.ajax({
       url: pagedUrl,
       success: function(results) {
+
         // Add nodes to creation queue
         results.nodes.forEach(function(node) {
           createQueue.push(node);
@@ -57,7 +59,7 @@
     {
       // Update count shown in paging button
       $moreButton.show();
-      $moreButton.val(moreLabel.replace('%1%', this.getRemaining()));
+//      $moreButton.val(moreLabel.replace('%1%', this.getRemaining()));
     }
     else
     {
